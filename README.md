@@ -3,7 +3,9 @@ Elemental infix aritmethic expresion parser and executor.
 
 ## Overview
 The purpose of this simple excercise is to provide a simple command line calculator (aritmethic infix operator syntax).
-The operands are limited to just one digit integers (0 to 9) in this version. The operators are limited to arithmetic ones: **+ - * / ^ ( )** 
+The operands are limited to just one digit integers (0 to 9) in this version. The operators are limited to arithmetic ones:
+
+**+ - * / ^ ( )** 
 
 ## Build and run
 ### How to build calc
