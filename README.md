@@ -3,12 +3,12 @@ Elemental infix aritmethic expresion parser and executor.
 
 ## Overview
 The purpose of this simple excercise is to provide a simple command line calculator (aritmethic infix operator syntax).
-The operands are limited to just one digit integers (0 to 9) in this version. The operators are limited to arithmetic one: + - * / ^ ( ) 
+The operands are limited to just one digit integers (0 to 9) in this version. The operators are limited to arithmetic ones: **+ - * / ^ ( )** 
 
 ## Build and run
 ### How to build calc
 Download this repo. In its root directory you will see a Makefile. Positioned inside this directory (folder), open the console and then type the following:
-$ make
+$ **make**
 
 This performs two builds, the application (./bin/calc) calc and the unit test ./test/bin/test). After the two successful builds, the console should show the total of the test passed ok.
 
@@ -17,7 +17,7 @@ To run it from the console, you can supply many character expressions as you ple
 ```
 $ bin/calc
 Usage: calc [-v[1-2]]  <expression 1> <expression 2> ... <expression n>
-Example: calc -v2  1+1  5-6/2+3*4  3+4*(2+1*1*(4-(1+1)))-(9+7)  1*2*3*(2-1/3)  "(4 + 5 * (7 - 3)) - 2"
+Example: calc -v1  1+1  5-6/2+3*4  '3+4*(2+1*1*(4-(1+1)))-(9+7)'  1*2*3*(2-1/3)  "(4 + 5 * (7 - 3)) - 2"
 ```
 ### How to check the application
 You can run the following and check the printed values:
@@ -76,6 +76,10 @@ Result = 14
 Result = 22
 ==============================================================================
 ```
+For further debug level you have the first argument -v2 and -v3
+calc **-v2** .... adds each visulized node with operator priority **!** and node serial number or sequence number **#**
+Also shows messages about each node insertion and deletion in the AST.
+calc **-v3** (the paranoic debug level) also shows the partial tree (AST snapshots) after each step of insertion/deletion.
 
 ### How to re-run the unit tests:
 ```
@@ -90,7 +94,7 @@ ALL TEST PASSED !
 ```
 ## Further builds
 ### Rebuild all in release
-Normal build generates by default executables having debug information. When you perform a regular build typing **make**, a debug buils is performed. You can confirm this reading the compilation of each .cpp file and noticing "g++ -g3 -O0 ...".
+Normal build generates by default executables having debug information. When you perform a regular build typing **make**, a debug build is performed. You can confirm this reading the compilation of each .cpp file and noticing "g++ -g3 -O0 ...".
 When you need to do a final build without debug info (release mode), you have to type:
 ```
 $ make clean
@@ -156,3 +160,13 @@ ALL TEST PASSED !
 
 ```
 You notice now that every file is built in release mode ("g++ -g0 -O3 ..."). Also the executable files ./bin/calc and ./test/bin/test are much smaller in size.
+
+### Partial builds
+$ make app bulds only newer files to produce the application : ./bin/calc
+$ make test bulds only newer files to produce the application : ./test/bin/test
+$ make all builds all (application and test). It is the same as just typing make.
+
+### Cleaning object files and executables
+$ make clean  erases all the object and executables previosly built, enabling a further clean build from scratch.
+$make cleanapp just cleans the object files related with the application, and its executable file calc.
+$make cleantest just cleans the object files related with the unit test, and its executable file test.
