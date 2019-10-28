@@ -36,7 +36,7 @@ Expression #5 : Result = 22
 ```
 
 ### How to check the application
-You can also visualize the AST (Abstract Syntax Tree) internally generated to evaluate each expression:
+You can also visualize the **AST** (Abstract Syntax Tree) internally generated to evaluate each expression. To do this you only have to add the **-v** or **-v1** option to the first argument of the command line:
 ```
 $ bin/calc -v 1+1  5-6/2+3*4  '(4 + 5 * (7 - 3)) - 2'
 
@@ -79,7 +79,8 @@ Result = 22
 For further debug level you have the first argument -v2 and -v3
 calc **-v2** .... adds each visulized node with operator priority **!** and node serial number or sequence number **#**
 Also shows messages about each node insertion and deletion in the AST.
-calc **-v3** (the paranoic debug level) also shows the partial tree (AST snapshots) after each step of insertion/deletion.
+
+calc **-v3** (the paranoic debug level) also shows the partial constructed tree (like AST snapshots) after each step of insertion/deletion.
 
 ### How to re-run the unit tests:
 ```
