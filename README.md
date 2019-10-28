@@ -164,10 +164,14 @@ You notice now that every file is built in release mode ("g++ -g0 -O3 ..."). Als
 
 ### Partial builds
 $ make app bulds only newer files to produce the application : ./bin/calc
+
 $ make test bulds only newer files to produce the application : ./test/bin/test
+
 $ make all builds all (application and test). It is the same as just typing make.
 
 ### Cleaning object files and executables
 $ make clean  erases all the object and executables previosly built, enabling a further clean build from scratch.
+
 $make cleanapp just cleans the object files related with the application, and its executable file calc.
+
 $make cleantest just cleans the object files related with the unit test, and its executable file test.
