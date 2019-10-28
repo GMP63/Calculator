@@ -76,7 +76,8 @@ Result = 14
 Result = 22
 ==============================================================================
 ```
-For further debug level you have the first argument -v2 and -v3
+For further debug level you have the first argument -v2 and -v3 .
+
 calc **-v2** .... adds each visulized node with operator priority **!** and node serial number or sequence number **#**
 Also shows messages about each node insertion and deletion in the AST.
 
