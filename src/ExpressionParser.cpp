@@ -306,8 +306,8 @@ void ExpressionParser::parseExpression(const char* pcExpression)
             {
                 debugNode("Deleting Current Item:", pCurrent);
             }
-
-            assert( pTree->deleteCurrentPreserveRight() );// remove former '(' node matching the new generated ')'.
+            // Remove former '(' node matching the new generated ')'. Also, force the new current = parent
+            assert( pTree->deleteCurrentPreserveRight(true) );
             pFactory->destroyNode(pCurrent);
         }
         else // new node creation and inserton into the tree
