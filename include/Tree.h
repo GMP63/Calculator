@@ -44,8 +44,8 @@ public:
 
     void makeLeftHalfTree(Node<Data>* const newRoot);
     void makeRightHalfTree(Node<Data>* const newRoot);
-    bool deleteCurrentPreserveLeft();
-    bool deleteCurrentPreserveRight();
+    bool deleteCurrentPreserveLeft(bool currentGoUp = false);
+    bool deleteCurrentPreserveRight(bool currentGoUp = false);
     bool insertOverCurrentOnLeft(Node<Data>* newNode, bool subtreeTruncationCheck = false);
     bool insertOverCurrentOnRight(Node<Data>* newNode, bool subtreeTruncationCheck = false);
     bool insertUnderCurrentOnLeft(Node<Data>* newNode, bool zigzag = false, bool subtreeTruncationCheck = false);
@@ -189,7 +189,7 @@ void Tree<Data>::makeRightHalfTree(Node<Data>* const newRoot)
 }
 
 template<class Data>
-bool Tree<Data>::deleteCurrentPreserveLeft()
+bool Tree<Data>::deleteCurrentPreserveLeft(bool currentGoUp /* = false */)
 {
     if (pCurrentNode == nullptr)
         return false; // void Tree protection
@@ -200,7 +200,7 @@ bool Tree<Data>::deleteCurrentPreserveLeft()
 
     Node<Data>* left = pCurrentNode->getLeft();
     hangPreferablyLeftOfCurrentParentNode(left);
-    if (left == nullptr) // there is not a node on the left, under the current.
+    if (left == nullptr || currentGoUp) // there is not a node on the left, under the current.
     {
         pCurrentNode = parent; // current position is on the parent;
     }
@@ -213,7 +213,7 @@ bool Tree<Data>::deleteCurrentPreserveLeft()
 }
 
 template<class Data>
-bool Tree<Data>::deleteCurrentPreserveRight()
+bool Tree<Data>::deleteCurrentPreserveRight(bool currentGoUp /* = false */)
 {
     if (pCurrentNode == nullptr)
         return false; // void Tree protection
@@ -224,13 +224,13 @@ bool Tree<Data>::deleteCurrentPreserveRight()
 
     Node<Data>* right = pCurrentNode->getRight();
     hangPreferablyRightOfCurrentParentNode(right);
-    if (right == nullptr) // there is not a node on the right, under the current.
+    if (right == nullptr || currentGoUp) // there is not a node on the right, under the current.
     {
-        pCurrentNode = parent; // current position is on the parent, now.
+        pCurrentNode = parent; // new current position is on the parent, now.
     }
-    else // there is a node under left part of the current node.
+    else // there is a node under right part of the current node.
     {
-        pCurrentNode = right; // current position is on the "preserved right", now.
+        pCurrentNode = right; // new current position is on the "preserved right", now.
     }
 
     return true;
