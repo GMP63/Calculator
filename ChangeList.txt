@@ -1,0 +1,5 @@
+# Change List
+
+## 1.0.0
+Original version. One digit calculator. Simple arithmetic operators ( ) ^ * / + - .
+
