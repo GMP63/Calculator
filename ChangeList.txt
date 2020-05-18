@@ -18,4 +18,3 @@ Note: + and - as unary operator are absolute positive value and sign change,
 ## 1.0.0
 Original version. One digit calculator.
 Simple arithmetic operators ( ) ^ * / + - .
-
