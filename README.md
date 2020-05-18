@@ -3,9 +3,29 @@ Elemental infix aritmethic expresion parser and executor.
 
 ## Overview
 The purpose of this simple excercise is to provide a simple command line calculator (aritmethic infix operator syntax).
-The operands are limited to just one digit integers (0 to 9) in this version. The operators are limited to arithmetic ones:
+In version 1.0.0 the operands were limited to just one digit integers (0 to 9). The operators were just limited to arithmetic ones:
 
 **+  -  *  /  ^  (  )** 
+
+### Version 1.1.0
+Full Multidigit Calculator. </br>
+Operators: **( ) ^ ! * / % + - + -**  </br>
+Exponential (Engineering) Notation with **e** or **E** between numbers. Like 1E06 or 1e-03</br>
+Numeric constants: **e**, **phi**, **pi**.</br>
+Functions (up to 4 letters):
+**sin**, **cos**, **tan**, **sinh**, **cosh**, **tanh**, **exp**, **asin**, **acos**, **atan**, **asih**, **acoh**, **atah**,
+**ln**, **log**, **ltwo**, **sqrt**, **curt**, **gama** </br>
+
+Note: **+** and **-** as unary operators are absolute positive value and sign change,
+      respectively.</br>
+      As binary operators they obviously are the addition and substraction (plus and minus operators respectively).</br>
+      **%** is the binary operator reminder (of an integer division).</br>
+      **/** is the division and </b>*</b> is the multiplication.</br>
+      **^** is the binary power operator.</br>
+      **!** is the unary factorial operator.</br>
+      **ltwo(x)** is the base 2 logarithm of x, **gama(x)** is really tGamma(x).</br>
+      **curt(x)** is the cubic root of x.</br>
+
 
 ## Build and run
 ### How to build calc
