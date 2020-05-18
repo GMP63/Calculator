@@ -42,35 +42,41 @@ void badParsingTests(TEST_REF)
 {
     ExpressionParser::Error error0 =  ExpressionParser::Error::success;
     ExpressionParser::Error error1 =  ExpressionParser::Error::voidExpression;
-    ExpressionParser::Error error2 =  ExpressionParser::Error::unaryOp;
-    ExpressionParser::Error error3 =  ExpressionParser::Error::contiguousOp;
-    ExpressionParser::Error error4 =  ExpressionParser::Error::multidigit;
-    ExpressionParser::Error error5 =  ExpressionParser::Error::decimal;
-    ExpressionParser::Error error6 =  ExpressionParser::Error::unknownChar;
-    ExpressionParser::Error error7 =  ExpressionParser::Error::noMatchingParenthesis;
+    ExpressionParser::Error error2 =  ExpressionParser::Error::contiguousOp;
+    ExpressionParser::Error error3 =  ExpressionParser::Error::missingOp;
+    ExpressionParser::Error error4 =  ExpressionParser::Error::incorrectDecimalPoint;
+    ExpressionParser::Error error5 =  ExpressionParser::Error::tooManyDigits;
+    ExpressionParser::Error error6 =  ExpressionParser::Error::unknownFunction;
+    ExpressionParser::Error error7 =  ExpressionParser::Error::unknownChar;
+    ExpressionParser::Error error8 =  ExpressionParser::Error::noMatchingParenthesis;
 
-    const ExpressionParser::Error errors[8] =
+    const ExpressionParser::Error errors[11] =
     {
         error0, error1, error2, error3,
-        error4, error5, error6, error7
+        error4, error5, error6, error6,
+        error7, error7, error8
     };
 
     static const char* expression0 = "1 + "; // mising digit is interpreted as "void" meaning 0
     static const char* expression1 = "\n  	  \n";
-    static const char* expression2 = "-1 + 1";
-    static const char* expression3 = "2 ** 3";
-    static const char* expression4 = "1 + 10";
-    static const char* expression5 = "1.1 + 1";
-    static const char* expression6 = "1 @ 1";
-    static const char* expression7 = "1 + (4 * 2";
+    static const char* expression2 = "2 ** 3";
+    static const char* expression3 = "3 sin 4";
+    static const char* expression4 = "1.11.2 + 10";
+    static const char* expression5 = "1 + 12345678901234567890123 + 2";
+    static const char* expression6 = "10 * pedo(20)";
+    static const char* expression6b = "1 % ABCDEFGHI";
+    static const char* expression7 = "1 @ 1";
+    static const char* expression7b = "1 % sen1";
+    static const char* expression8 = "1 + (4 * 2";
 
-    static const char* expressions[8] =
+    static const char* expressions[11] =
     {
         expression0, expression1, expression2, expression3,
-        expression4, expression5, expression6, expression7
+        expression4, expression5, expression6, expression6b,
+        expression7, expression7b, expression8
     };
 
-    for(int i = 0; i < 8; i++)
+    for(int i = 0; i < 11; i++)
     {
         ExpressionParser parser(expressions[i], ExpressionParser::Verbosity::none);
         if (i == 0)
@@ -84,19 +90,37 @@ void badParsingTests(TEST_REF)
 
 void parseAndEvaluatorTests(TEST_REF)
 {
-    const int result1 =  2;
+    const int result0 =  2;
+    const int result1 =  1;
     const int result2 = 14;
     const int result3 =  3;
     const int result4 = 10;
     const int result5 = 22;
-    const int results[5] = {result1, result2, result3, result4, result5};
+    const int result6 =  0;
+    const int result7 =  2;
+    const int result8 =  3;
+    const int result9 =  4;
+    const int results[10] = 
+    {
+        result0, result1, result2, result3, result4,
+        result5, result6, result7, result8, result9
+    };
 
-    static const char* expression1 = "1 + 1";
+    static const char* expression0 = "1 + 1";
+    static const char* expression1 = "1/2^2+3/4";
     static const char* expression2 = "5-6/2+3*4";
     static const char* expression3 = "3+4*(2+1*1*(4-(1+1)))-(9 + 7)";
     static const char* expression4 = "1*2*3*(2-1/3)";
     static const char* expression5 = "(4 + 5 * (7 - 3)) - 2";
-    static const char* expressions[5] = {expression1, expression2, expression3,expression4, expression5};
+    static const char* expression6 = "2 * 3 * 4 * 5 - 5!";
+    static const char* expression7 = "3 - sin(3.141592654 / 2)";
+    static const char* expression8 = " 3 + cos(3.141592654 / 2)";
+    static const char* expression9 = "5 - tan(3.141592654 / 4)";
+    static const char* expressions[10] =
+    {
+        expression0, expression1, expression2, expression3, expression4,
+        expression5, expression6, expression7, expression8, expression9
+    };
 
     for(int i = 0; i < 5; i++)
     {
@@ -113,10 +137,9 @@ void parseAndEvaluatorTests(TEST_REF)
 template <>
 NodeFactory<OperationItem>* NodeFactory<OperationItem>::pInstance(nullptr);
 
-int main(int argc, char* argv[])
+int main()
 {
     START_TESTS;
-    NodeFactory<OperationItem>* factory = NodeFactory<OperationItem>::getOrCreateInstance();
 
     nodeTests(TEST);
     badParsingTests(TEST);

@@ -1,0 +1,21 @@
+# Change List
+
+## 1.1.0
+Full Multidigit Calculator.
+Operators: ( ) ^ ! * / % + - + -.
+Engineering Notation with e or E between numbers.
+Numeric constants: e, phi, pi.
+Functions:
+sin, cos, tan, sinh, cosh, tanh, exp, asin, acos, atan, asih, acoh, atah,
+ln, log, ltwo, sqrt, curt, gama
+
+Note: + and - as unary operator are absolute positive value and sign change,
+      respectively. % is the reminder.
+      / is the division and * is the multiplication.
+      ltwo(x) is the base 2 logarithm of x, gama(x) is really tGamma(x).
+      curt(x) is the cubic root of x.
+
+## 1.0.0
+Original version. One digit calculator.
+Simple arithmetic operators ( ) ^ * / + - .
+

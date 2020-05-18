@@ -37,12 +37,12 @@ public:
 
 private:
     Node() = delete;
-    Node(const Data& d, unsigned n) : data(d), nSequence(n), pLeft(nullptr), pParent(nullptr), pRight(nullptr) {}
-    Node(const Data& d, unsigned n, Node* pp) : data(d), nSequence(n), pLeft(nullptr), pParent(pp), pRight(nullptr) {}
-    Node(const Data& d, unsigned n, Node* pl, Node* pp, Node* pr) : data(d), nSequence(n), pLeft(pl), pParent(pp), pRight(pr) {}
-    Node(Data&& d, unsigned n) : data(d), nSequence(n), pLeft(nullptr), pParent(nullptr), pRight(nullptr) {}
-    Node(Data&& d, unsigned n, Node* pp) : data(d), nSequence(n), pLeft(nullptr), pParent(pp), pRight(nullptr) {}
-    Node(Data&& d, unsigned n, Node* pl, Node* pp, Node* pr) : data(d), nSequence(n), pLeft(pl), pParent(pp), pRight(pr) {}
+    Node(const Data& d, unsigned n) : pLeft(nullptr), pParent(nullptr), pRight(nullptr), data(d), nSequence(n) {}
+    Node(const Data& d, unsigned n, Node* pp) : pLeft(nullptr), pParent(pp), pRight(nullptr), data(d), nSequence(n) {}
+    Node(const Data& d, unsigned n, Node* pl, Node* pp, Node* pr) : pLeft(pl), pParent(pp), pRight(pr), data(d), nSequence(n) {}
+    Node(Data&& d, unsigned n) : pLeft(nullptr), pParent(nullptr), pRight(nullptr), data(d), nSequence(n) {}
+    Node(Data&& d, unsigned n, Node* pp) : pLeft(nullptr), pParent(pp), pRight(nullptr), data(d), nSequence(n) {}
+    Node(Data&& d, unsigned n, Node* pl, Node* pp, Node* pr) : pLeft(pl), pParent(pp), pRight(pr), data(d), nSequence(n) {}
     ~Node() {} // this Tree implementation does not allocate anything.
 
     Node*        pLeft;

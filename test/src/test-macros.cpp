@@ -69,22 +69,30 @@ void TestByMacros::complainAboutValue(bool value, const char* file,
 bool TestByMacros::isTrue(bool v, const char* file, int line, const char* function)
 {
     if (v)
+    {
         ++goodCount;
+        return true;
+    }
     else
     {
         ++badCount;
         complainAboutValue(v, file, line, function);
+        return false;
     };
 }
 
 bool TestByMacros::isFalse(bool v, const char* file, int line, const char* function)
 {
     if (!v)
+    {
         ++goodCount;
+        return true;
+    }
     else
     {
         ++badCount;
         complainAboutValue(v, file, line, function);
+        return false;
     };
 }
 

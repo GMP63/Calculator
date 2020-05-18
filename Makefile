@@ -37,7 +37,7 @@ else
 endif
 
 # The compiler flags.
-CPPFLAGS = $(rod) -std=gnu++11 -Iinclude
+CPPFLAGS = $(rod) -std=c++11 -Wall -Wextra -Wpedantic -Iinclude
 # The linker flags.
 LDFLAGS = -lstdc++ -lm
 
