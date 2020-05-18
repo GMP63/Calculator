@@ -2,7 +2,7 @@
  * @file test-macros.h
  * @brief Header file declaring macros to test the exam logic.
  * @author Guillermo M. Paris
- * @date 2019-10-27
+ * @date 2019-12-10
  */
 
 #include <cassert>
@@ -28,7 +28,10 @@ public:
     bool isTrue(bool v, const char* file, int line, const char* function);
     bool isFalse(bool v, const char* file, int line, const char* function);
 
-    // Template functions declarations
+    //-----------------------------------
+    // Template functions declarations  |
+    //-----------------------------------
+
     template<typename V>
     bool isZero(V v, const char* file, int line, const char* function);
     template<typename V>
@@ -57,7 +60,6 @@ private:
                                    const char* file, int line, const char* function);
 
     static const char* sFailed;
-    //static const char* expected;
     static const char* sTested;
     static const char* sNotExpected;
     static const char* sEqual;
@@ -85,6 +87,7 @@ using tst = gp::test::TestByMacros;
 // Macro definitions
 #define START_TESTS             tst   oTest
 #define TEST_REF                tst&  oTest
+#define TEST_OBJ                      oTest
 #define TEST                          oTest
 
 #define EXPECT_TRUE(testVal)    oTest.isTrue(testVal, __FILE__, __LINE__, __FUNCTION__)

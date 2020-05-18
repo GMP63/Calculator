@@ -7,18 +7,42 @@
  */
 
 #include <iomanip>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include "ExpressionParser.h"
 #include "NodeFactory.h"
 #include "OperationItem.h"
 
+union uintchar4
+{
+    uintchar4(const char* sym);
+
+    uint32_t number;
+    char symbol[4];
+};
+
+uintchar4::uintchar4(const char* sym)
+{
+    unsigned n = 0;
+    if (sym)
+    {
+        for (; n < 4; n++)
+            if ((symbol[n] = sym[n]) == 0)
+                break;
+        n++;
+    }
+
+    for (; n < 4; n++)
+        symbol[n] = 0;
+}
+
 static void debugItem(const char* msg, const OperationItem& item, bool noCR = false)
 {
     bool isNumber = (item.id == OperationId::number ? true : false);
     std::cout << (msg ? msg : "") << " (" ;
     if (isNumber)
-        std::cout << static_cast<int>(item.value);
+        std::cout << item.value;
     else
         std::cout << item.symbol;
     
@@ -54,10 +78,11 @@ const char*  ExpressionParser::errors[static_cast<size_t>(Error::total)] =
 {
     "Ok. No error.",
     "No arithmetic expression to parse.",
-    "Unary operators like + or - are not supported in this version.",
     "Two consecutive operators.",
-    "Two consecutive digits. Multi-digit numbers are not supported in this version.",
-    "Decimal numbers are not supported in this version.",
+    "Missing operator.",
+    "Incorrect placement of the decimal point.",
+    "Too many decimal digits.",
+    "Unknown function name.",
     "Unknown character.",
     "Unbalanced number of parenthesis."
 };
@@ -66,7 +91,7 @@ const char* ExpressionParser::getErrorMessage(int index)
 {
     const int min = static_cast<int>(Error::first);
     const int max = static_cast<int>(Error::total);
-    if (min <= index < max)
+    if (min <= index && index < max)
        return errors[index];
     else
     {
@@ -75,21 +100,33 @@ const char* ExpressionParser::getErrorMessage(int index)
 }
 
 
-ExpressionParser::ExpressionParser(const char* pcExpressionr, Verbosity v)
+ExpressionParser::ExpressionParser(const char* pcExpression, Verbosity v)
     : verbosity(v)
     , lastError(Error::success)
     , cLastParsed(0)
     , lastIndex(0)
-    , szExpression(pcExpressionr)
+    , szExpression(pcExpression)
     , pTree(nullptr)
 {
-    parseExpression(pcExpressionr);
+    parseExpression(pcExpression);
 }
 
 std::ostream& ExpressionParser::operator << (std::ostream& os)
 {
     printTree(os);
     return os;
+}
+
+void  ExpressionParser::populateFunctionNamesTable()
+{
+    unsigned int min = static_cast<unsigned int>(OperationId::firstFunction);
+    unsigned int max = static_cast<unsigned int>(OperationId::lastFunction);
+    for (unsigned int u = min; u <= max; u++)
+    {
+        const OperationItem & opItem = OperationItem::operandTable[u];
+        uintchar4 uKey(opItem.symbol);
+        functionNames.insert(std::make_pair(uKey.number , opItem.id));
+    }
 }
 
 const char*  ExpressionParser::expressionSanityCheck(const char* pcExpression)
@@ -144,9 +181,176 @@ const char*  ExpressionParser::expressionSanityCheck(const char* pcExpression)
     return pcExpression;
 }
 
-bool  ExpressionParser::generateNewItem(char c, SearchStrategy& newStrategy,
-                                        OperationItem* newItemToComplete)
+bool  ExpressionParser::parseNumberForward(double& returnValue, const char* & currentParsingLine)
 {
+    bool decimalPoint = false;
+    bool engNotation = false;
+    char c = *currentParsingLine;
+    int digitCount = 0;
+    std::string sNumber;
+
+    do
+    {
+        if (c == '.')
+        {
+            if (decimalPoint)
+            {
+                lastError = Error::incorrectDecimalPoint; // error, two decimal points.
+                cLastParsed = c;
+                return false; // error, two decimal points.
+            }
+
+            decimalPoint = true;
+        }
+        else if (c == 'e' || c == 'E')
+        {
+            if (engNotation)
+            {                        // Two exponent marks! Then second 'E' was not an engineering notation mark.
+               --currentParsingLine; // give back 'E' to the curent line. Not processed here.
+                break;
+            }
+
+            engNotation = true;
+
+            char cNext = *(1 + currentParsingLine);
+            if (('0' <= cNext && cNext <= '9') || cNext == '+' || cNext == '-')
+            {
+                sNumber.append(1, c);
+                sNumber.append(1, cNext);
+                currentParsingLine += 2;
+                digitCount += 2;
+                c = *currentParsingLine;
+                continue;
+            }
+            else // 'E' was not an engineering notation mark.
+            {
+                --currentParsingLine; // give back 'E' to the curent line. Not processed here.
+                break;
+            }
+        }
+
+        sNumber.append(1, c);
+        if ('0' <= c && c <= '9')
+            digitCount++;
+
+        c = *(++currentParsingLine);
+    }
+    while ((('0' <= c && c <= '9') || c == '.' || c == 'e' || c == 'E') && digitCount < maxNumberOfDigits);
+
+    if (digitCount >= maxNumberOfDigits)
+    {
+        lastError = Error::tooManyDigits; // error, too many decimal digits.
+        cLastParsed = c;
+        return false;
+    }
+
+    if (sNumber.back() == '.') // if last numeric character was '.'
+    {
+        sNumber.append(1, '0'); // avoid ending in '.' ,  "nnn.0" is better
+    }
+
+    returnValue = std::stold(sNumber);
+    return true;
+}
+
+bool  ExpressionParser::parseAlphabeticForward(OperationId & returnOp, const char* & currentLine)
+{
+    using functionNamesIter = std::unordered_map<uint32_t, OperationId>::iterator;
+
+    char name[6] = {0}; // word to be search must be wholy clear.
+    name[0] = *currentLine; // caller function assures this is a valid letter char
+    name[1] = *(1 + currentLine);
+
+    if ((name[1] < 'A' || name[1] > 'Z') && (name[1] < 'a' || name[1] > 'z'))
+    {
+        if (name[0] == 'e') // just one letter => Euler number
+        {
+            currentLine++; // skip the complete constant name
+            returnOp = OperationId::e;
+            return true;
+        }
+
+        currentLine++;
+        cLastParsed = name[1];
+        lastError = Error::unknownChar; // Unrecognized character.
+        return false; // not a letter char
+    }
+
+    name[2] = *(2 + currentLine);
+    if ((name[2] < 'A' || name[2] > 'Z') && (name[2] < 'a' || name[2] > 'z') && name[2] != '(')
+    {
+        if (name[0] == 'p' && name[1] == 'i' ) // just two letters => Pitágoras number
+        {
+            currentLine += 2; // skip the complete constant name
+            returnOp = OperationId::pi;
+            return true;
+        }
+
+        currentLine += 2;
+        cLastParsed = name[2];
+        lastError = Error::unknownChar; // Unrecognized character.
+        return false; // neither a letter char nor a parenthesis
+    }
+
+    int nameLength = 2; // assume function names are 2 char long.
+
+    if (name[2] != '(')
+    {
+        nameLength++; // function name is at least 3 char long.
+        name[3] = *(3 + currentLine);
+        if ((name[3] < 'A' || name[3] > 'Z') && (name[3] < 'a' || name[3] > 'z') && name[3] != '(')
+        {
+            if (name[0] == 'p' && name[1] == 'h' && name[2] == 'i' ) // just three letters => Armonic number
+            {
+                currentLine += 3; // skip the complete constant name
+                returnOp = OperationId::phi;
+                return true;
+            }
+
+            currentLine += 3;
+            cLastParsed = name[3];
+            lastError = Error::unknownChar; // Unrecognized character.
+            return false; // neither a letter char nor a parenthesis
+        }
+
+        if (name[3] != '(')
+        {
+            nameLength++; // function name is 4 char long.
+            if ((name[4] = *(4 + currentLine)) != '(') // bad finished function name
+            {
+                cLastParsed = name[0];
+                lastError = Error::unknownFunction; // Unrecognized function name.
+                return false; // Unknown operator or function name.
+            }
+        }
+        else
+            name[3] = 0; // removing parenthesis from the name.
+    }
+    else
+        name[2] = 0; // removing parenthesis from the name.
+
+    if (functionNames.empty())     // function name table not built yet, this is the very first use.
+        populateFunctionNamesTable(); // Then, populate the table just one time.
+
+    uintchar4 uKey(name);
+    functionNamesIter it = functionNames.find(uKey.number);
+
+    if (it == functionNames.end())
+    {
+        cLastParsed = name[0];
+        lastError = Error::unknownFunction; // Unrecognized function name.
+        return false; // Unknown operator or function name.
+    }
+
+    currentLine += nameLength; // skip the complete function name
+    returnOp = it->second;
+    return true;
+}
+
+bool  ExpressionParser::parseNewItem(const char* & currentParsingLine,
+                                     SearchStrategy& newStrategy, OperationItem* newItemToComplete)
+{
+    char c = *currentParsingLine;
     OperationId prevId = newItemToComplete->id; // retrieve the former Id for previous iteration
     newItemToComplete->id = OperationId::number; // default initial values is for number operands
     newItemToComplete->value = 0;
@@ -163,19 +367,25 @@ bool  ExpressionParser::generateNewItem(char c, SearchStrategy& newStrategy,
     }
     else if (c == '+' || c == '-')
     {
-        if (prevId != OperationId::number && prevId != OperationId::closeParenthesis)
+        if (prevId == OperationId::number || prevId == OperationId::factorial
+            || prevId == OperationId::closeParenthesis)
         {
-            lastError = Error::unaryOp; // unary + or - not supported in this version :(.
-            cLastParsed = c;
-            return false;
+            if (c == '+')
+                newItemToComplete->id = OperationId::plus;
+            else
+                newItemToComplete->id = OperationId::minus;
         }
+        else // unary operators + or -
+        {
+            if (c == '+')
+                newItemToComplete->id = OperationId::positive;
+            else
+                newItemToComplete->id = OperationId::negative;
 
-        if (c == '+')
-            newItemToComplete->id = OperationId::plus;
-        else
-            newItemToComplete->id = OperationId::minus;
+            newStrategy = SearchStrategy::noIterate;
+        }
     }
-    else if (c == '*' || c == '/' || c == '^')
+    else if (c == '*' || c == '/' || c == '%' || c == '^' || c == '!')
     {
         if (prevId != OperationId::number && prevId != OperationId::closeParenthesis)
         {
@@ -188,57 +398,72 @@ bool  ExpressionParser::generateNewItem(char c, SearchStrategy& newStrategy,
             newItemToComplete->id = OperationId::multiply;
         else if (c == '/')
             newItemToComplete->id = OperationId::divide;
-        else
+        else if (c == '%')
+            newItemToComplete->id = OperationId::reminder;
+        else if (c == '^')
         {
             newItemToComplete->id = OperationId::power;
             newStrategy = SearchStrategy::rightToLeft;
         }
+        else // '!'
+            newItemToComplete->id = OperationId::factorial;
     }
-    else if('0' <= c &&  c <= '9')  // numeric digit, only one.
+    else if(('0' <= c && c <= '9') || c == '.')  // numeric digits, up to ExpressionParser::maxNumberOfDigits.
+    {
+        double value = 0.0;
+        if (parseNumberForward(value, currentParsingLine))
+        {
+            newItemToComplete->id = OperationId::number;
+            newItemToComplete->value = value;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z'))  // posible alphabetic function names.
     {
         if (prevId == OperationId::number)
         {
-            lastError = Error::multidigit; // too many digits
+            lastError = Error::missingOp; // Missing operator between number and function name.
             cLastParsed = c;
             return false;
         }
 
-        newItemToComplete->id = OperationId::number;
-        newItemToComplete->value = c - '0';
-    }
-    else if(c == '.')
-    {
-        lastError = Error::decimal; // no decimal point in this version :(
-        cLastParsed = c;
-        return false;
+        OperationId opId = OperationId::openParenthesis; // initial neutral invalid value
+        if (parseAlphabeticForward(opId, currentParsingLine))
+        {
+            newItemToComplete->id = OperationId::number;
+
+            if (opId == OperationId::pi)
+                newItemToComplete->value = 4 * atan(1);
+            else if (opId == OperationId::phi)
+                newItemToComplete->value = (1 + sqrt(5))/2;
+            else if (opId == OperationId::e)
+                newItemToComplete->value = exp(1);
+
+            else // real true operation (function) code
+            {
+                newItemToComplete->id = opId;
+                newItemToComplete->value = 0;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     else // if a parsing error
     {
-        lastError = Error::unknownChar; // Unrecognized character
+        lastError = Error::unknownChar; // Unrecognized character.
         cLastParsed = c;
         return false;
     }
 
+    currentParsingLine++; // fetch next character
     return true;
-}
-
-void  ExpressionParser::removeFakeOpenParenthesisRoot()
-{
-    NodeFactory<OperationItem>* pFactory = NodeFactory<OperationItem>::getOrCreateInstance();
-
-    Node<OperationItem>* pCurrentRoot = pTree->getRoot();
-    Node<OperationItem>* pNewRoot = pCurrentRoot->getRight();
-    if (pNewRoot != nullptr)
-    {
-        if (verbosity >= Verbosity::full)
-        {
-            debugNode("Deleting False Root node:", pCurrentRoot);
-            debugNode("New Root node:", pNewRoot);
-        }
-        pNewRoot->setParent(nullptr);
-        pTree->setRootAndCurrent(pNewRoot);
-        pFactory->destroyNode(pCurrentRoot);
-    }
 }
 
 void ExpressionParser::parseExpression(const char* pcExpression)
@@ -256,17 +481,20 @@ void ExpressionParser::parseExpression(const char* pcExpression)
     // Initialize the tree with the '(' node, as a mark to be deleted at the end.
     pTree = new Tree<OperationItem>(pFactory->createNode(opRoot));
     char c = 0;
-    while ((c = *pcExpression++) != 0) // Loop to o the entire expression parsing.
+    while ((c = *pcExpression) != 0) // Loop to o the entire expression parsing.
     {
         if(c == '\0')
             break;  // protective, not rationally needed.
         else if (c == ' ' ||  c == '\t' || c == '\r' || c == '\n')
+        {
+            pcExpression++;
             continue;
+        }
 
         OperationItem opNewItemToRank(prevId, 0);  // Default is former Id
         SearchStrategy search = SearchStrategy::leftToRigth; // Default is left-associative.
 
-        if (! generateNewItem(c, search, &opNewItemToRank)) // check the new char and generate a new item
+        if (! parseNewItem(pcExpression, search, &opNewItemToRank)) // check the new char and generate a new item
         {
             lastIndex = pcExpression - szExpression;
             return;
@@ -336,6 +564,25 @@ void ExpressionParser::parseExpression(const char* pcExpression)
     removeFakeOpenParenthesisRoot();
 }
 
+void  ExpressionParser::removeFakeOpenParenthesisRoot()
+{
+    NodeFactory<OperationItem>* pFactory = NodeFactory<OperationItem>::getOrCreateInstance();
+
+    Node<OperationItem>* pCurrentRoot = pTree->getRoot();
+    Node<OperationItem>* pNewRoot = pCurrentRoot->getRight();
+    if (pNewRoot != nullptr)
+    {
+        if (verbosity >= Verbosity::full)
+        {
+            debugNode("Deleting False Root node:", pCurrentRoot);
+            debugNode("New Root node:", pNewRoot);
+        }
+        pNewRoot->setParent(nullptr);
+        pTree->setRootAndCurrent(pNewRoot);
+        pFactory->destroyNode(pCurrentRoot);
+    }
+}
+
 void  ExpressionParser::printNode( const Node<OperationItem>* pNode, int indent,
                                    std::ostream& os, bool norecursive /* = false */) const
 {
@@ -355,26 +602,15 @@ void  ExpressionParser::printNode( const Node<OperationItem>* pNode, int indent,
 
     OperationItem nodeData(pNode->getData());
     os << std::string(indent, ' ') << "(";
-    switch (nodeData.id)
+    if (OperationId::first <= nodeData.id && nodeData.id < OperationId::total)
     {
-    case OperationId::number:
-        os << int(nodeData.value);
-        break;
-
-    case OperationId::openParenthesis:
-    case OperationId::closeParenthesis:
-    case OperationId::power:
-    case OperationId::multiply:
-    case OperationId::divide:
-    case OperationId::plus:
-    case OperationId::minus:
-        os << nodeData.symbol;
-        break;
-
-    default:
-        os << "error";
-        break;
+        if (nodeData.id == OperationId::number)
+            os << nodeData.value;
+        else
+            os << nodeData.symbol;
     }
+    else
+        os << "error";
 
     os << ") " ;
     if (verbosity >= Verbosity::full)

@@ -8,6 +8,7 @@
 #ifndef _ARITHMETICEVALUATOR_H
 #define _ARITHMETICEVALUATOR_H
 
+#include "OperationId.h"
 #include "Tree.h"
 
 struct OperationItem;
@@ -24,6 +25,7 @@ public:
 
 private:
     double evaluateNode(const Node<OperationItem>* node);
+    double factorial(double n);
 
     int    lastError;
     double result;

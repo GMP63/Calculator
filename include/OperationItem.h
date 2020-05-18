@@ -9,27 +9,25 @@
 #define _OPERATIONITEM_H
 
 #include <cstdint>
-
-enum class OperationId : char
-{
-    first = 0, number = first, openParenthesis, closeParenthesis, power, multiply, divide, plus, minus, total
-};
+#include "OperationId.h"
 
 struct OperationItem
 {
     OperationItem() = delete;
     OperationItem(OperationId oid);
     OperationItem(OperationId oid, int value);
-    OperationItem(OperationId oid, char pri, char sym, char val) : id(oid), priority(pri), symbol(sym), value(char(val)) {}
+    OperationItem(OperationId oid, char pri, const char* sym, char val)
+                 : id(oid), priority(pri), symbol(sym), value(val) {}
 
     static void adjustPriorityAndSymbolAccordingToId(OperationItem& objToSet);
     
-    static OperationItem  operandTable[static_cast<size_t>(OperationId::total)];
+    static const unsigned int   symbolLength = 4;
+    static const OperationItem  operandTable[static_cast<size_t>(OperationId::total)];
 
     OperationId id;
     char        priority;
-    char        symbol;
-    int8_t      value; // For only one digit in this example. Change to double for future general calculator use.
+    const char* symbol;
+    double      value;
 };
 
 

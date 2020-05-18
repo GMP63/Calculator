@@ -10,6 +10,8 @@
 #define _EXPRESSIONPARSER_H
 
 #include <iostream>
+#include <unordered_map>
+#include "OperationId.h"
 #include "Tree.h"
 
 struct OperationItem;
@@ -18,13 +20,15 @@ class ExpressionParser
 {
     static const int rootMargin = 2;
     static const int indentMargin = 8;
+    static const int maxNumberOfDigits = 20; // for max of uint_64_t
 
 public:
 
     enum class Error
     {
-        first = 0, success = 0, voidExpression, unaryOp, contiguousOp,
-        multidigit, decimal, unknownChar, noMatchingParenthesis, total
+        first = 0, success = 0, voidExpression, contiguousOp,
+        missingOp, incorrectDecimalPoint, tooManyDigits,
+        unknownFunction, unknownChar, noMatchingParenthesis, total
     };
 
     enum class Verbosity // for debug purpose, only
@@ -58,10 +62,13 @@ private:
         rightToLeft
     };
 
+    void  populateFunctionNamesTable();
     const char* expressionSanityCheck(const char* pcExpression);
-    bool  generateNewItem(char c, SearchStrategy& newStrategy, OperationItem* newItemToComplete);
-    void  removeFakeOpenParenthesisRoot();
+    bool  parseNumberForward(double& returnValue, const char* & currentLine);
+    bool  parseAlphabeticForward(OperationId& returnOp, const char* & currentLine);
+    bool  parseNewItem(const char* & currentLine, SearchStrategy& newStrategy, OperationItem* newItemToComplete);
     void  parseExpression(const char* pcExpression);
+    void  removeFakeOpenParenthesisRoot();
     void  printNode(const Node<OperationItem>* node, int indent, std::ostream& os, bool norecursive = false) const;
     void  destroyNode(Node<OperationItem>* const node, bool norecursive = false);
     void  destroyTree();
@@ -74,6 +81,7 @@ private:
     int            lastIndex;
     const char*    szExpression;
     Tree<OperationItem>* pTree;
+    std::unordered_map<uint32_t, OperationId> functionNames;
 };
 
 #endif // _EXPRESSIONPARSER_H
