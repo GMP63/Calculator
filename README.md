@@ -1,5 +1,5 @@
 # Calculator
-Elemental infix aritmethic expresion parser and executor.
+Elemental infix aritmethic expresion parser and evaluator.
 
 ## Overview
 The purpose of this simple excercise is to provide a simple command line calculator (aritmethic infix operator syntax).
@@ -29,7 +29,7 @@ Note: **+** and **-** as unary operators are absolute positive value and sign ch
 
 ## Build and run
 ### How to build calc
-Download this repo. In its root directory you will see a Makefile. Positioned inside this directory (folder), open the console and then type the following:
+Download this repo. In its root directory you will see a Makefile. Being positioned inside this directory (folder), open the console and then type the following:
 $ **make**
 
 This performs two builds, the application (./bin/calc) calc and the unit test ./test/bin/test). After the two successful builds, the console should show the total of the test passed ok.
@@ -101,9 +101,40 @@ Result = 22
 For further debug level you have the first argument -v2 and -v3 .
 
 calc **-v2** .... adds each visulized node with operator priority **!** and node serial number or sequence number **#**
-Also shows messages about each node insertion and deletion in the AST.
+Also shows messages about each node insertion and deletion in the AST:</br>
+```
+$ bin/calc -v2 '3+4*(2+1*1*(4-(1+1)))-(9+7)'
 
-calc **-v3** (the paranoic debug level) also shows the partial constructed tree (like AST snapshots) after each step of insertion/deletion.
+============================== Expression #1 ==============================
+....
+....
+----------------- AST TREE -----------------
+                  (7) 0!   #23
+          (+) 6!   #22
+                  (9) 0!   #21
+  (-) 6!   #19
+                                                          (1) 0!   #18
+                                                  (+) 6!   #17
+                                                          (1) 0!   #16
+                                          (-) 6!   #14
+                                                  (4) 0!   #13
+                                  (*) 4!   #11
+                                                  (1) 0!   #10
+                                          (*) 4!   #9
+                                                  (1) 0!   #8
+                          (+) 6!   #7
+                                  (2) 0!   #6
+                  (*) 4!   #4
+                          (4) 0!   #3
+          (+) 6!   #2
+                  (3) 0!   #1
+
+Result = 3
+==============================================================================
+
+```
+
+calc **-v3** (the paranoic debug level) also shows the partial constructed tree (like AST snapshot sequence) after each step of insertion/deletion.
 
 ### How to re-run the unit tests:
 ```
