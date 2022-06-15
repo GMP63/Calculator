@@ -122,11 +122,19 @@ void parseAndEvaluatorTests(TEST_REF)
         expression5, expression6, expression7, expression8, expression9
     };
 
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < 10; i++)
     {
         ExpressionParser parser(expressions[i], ExpressionParser::Verbosity::none);
         EXPECT_TRUE(parser.finishedOK());
-        EXPECT_EQ(ArithmeticEvaluator(parser.getTree()).getResult(), results[i]);
+        if (i < 7)
+            EXPECT_EQ(ArithmeticEvaluator(parser.getTree()).getResult(), results[i]);
+        else // floating point expressions
+        {
+            double evaluated = ArithmeticEvaluator(parser.getTree()).getResult();
+            double diff = evaluated - double(results[i]);
+            EXPECT_LE(diff, 0.000000001);
+            EXPECT_GE(diff, -0.000000001);
+        }
     }
 
     ExpressionParser parser("4+5+7/2", ExpressionParser::Verbosity::none);

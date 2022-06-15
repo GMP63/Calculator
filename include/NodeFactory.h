@@ -129,8 +129,8 @@ void NodeFactory<Data>::destroyNode(Node<Data>* pNode)
 {
     if (pNode == nullptr) return;
     
-    delete pNode;
     vAllocatedNodes[pNode->nSequence] = nullptr;
+    delete pNode;
 }
 
 template<class Data>
